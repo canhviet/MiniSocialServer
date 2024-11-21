@@ -100,17 +100,16 @@ public class UserServiceImpl implements UserService {
         User user = getUserById(userId);
         user.setName(request.getName());
         user.setDateOfBirth(request.getDateOfBirth());
-        user.setGender(request.getGender());
         user.setPhone(request.getPhone());
-        if (!request.getEmail().equals(user.getEmail())) {
-            // check email from database if not exist then allow update email otherwise throw exception
-            user.setEmail(request.getEmail());
-        }
-        user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
         user.setAvatar(request.getAvatar());
-        user.setStatus(request.getStatus());
-        user.setType(UserType.valueOf(request.getType().toUpperCase()));
+        // check email from database if not exist then allow update email otherwise throw exception
+//        if (!request.getEmail().equals(user.getEmail())) {
+//            user.setEmail(request.getEmail());
+//        }
+//        user.setUsername(request.getUsername());
+//        user.setStatus(request.getStatus());
+//        user.setGender(request.getGender());
+//        user.setType(UserType.valueOf(request.getType().toUpperCase()));
         userRepository.save(user);
 
         log.info("User has updated successfully, userId={}", userId);

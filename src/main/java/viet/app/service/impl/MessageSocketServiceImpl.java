@@ -2,22 +2,28 @@ package viet.app.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import viet.app.dto.request.FollowRequest;
 import viet.app.dto.request.MessageRequest;
 import viet.app.dto.response.ConversationResponse;
 import viet.app.dto.response.MessageResponse;
+import viet.app.dto.response.NotificationResponse;
 import viet.app.dto.response.WebSocketResponse;
 import viet.app.model.Conversation;
 import viet.app.model.Message;
+import viet.app.model.Notification;
 import viet.app.model.User;
 import viet.app.repository.ConversationRepository;
 import viet.app.repository.MessageRepository;
+import viet.app.repository.NotificationRepository;
 import viet.app.repository.UserRepository;
 import viet.app.service.MessageSocketService;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MessageSocketServiceImpl implements MessageSocketService {
@@ -25,6 +31,7 @@ public class MessageSocketServiceImpl implements MessageSocketService {
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
 
     /**
      * Send user conversations to a specific user by their user ID through a web socket.
@@ -41,6 +48,96 @@ public class MessageSocketServiceImpl implements MessageSocketService {
                         .data(conversation)
                         .build()
         );
+    }
+
+    @Override
+    public void showNotification(long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        List<Notification> notificationList = notificationRepository.findAllByUser(user);
+        List<NotificationResponse> list = notificationList.stream()
+                .map((notification -> NotificationResponse.builder()
+                        .id(notification.getId())
+                        .content(notification.getContent())
+                        .read(notification.isRead())
+                        .timestamp(notification.getTimestamp())
+                        .isMessage(notification.isMessage())
+                        .isFollow(notification.isFollow())
+                        .otherUser(notification.getOtherUser().getId())
+                        .build()))
+                .toList();
+        messagingTemplate.convertAndSend(
+                "/topic/notify/".concat(String.valueOf(userId)),
+                WebSocketResponse.builder()
+                        .type("ALL")
+                        .data(list)
+                        .build()
+        );
+    }
+
+    @Override
+    public void followNotification(FollowRequest followRequest) {
+        User followingUser = userRepository.findById(followRequest.getUserId()).orElse(null);
+        Notification noti = new Notification();
+        noti.setUser(userRepository.findById(followRequest.getFollowingId()).orElse(null));
+        noti.setContent(followingUser.getName() + " is following you");
+        noti.setRead(false);
+        noti.setFollow(true);
+        noti.setMessage(false);
+        noti.setOtherUser(followingUser);
+
+        Notification saveNotification = notificationRepository.save(noti);
+
+        NotificationResponse notificationResponse = NotificationResponse.builder()
+                .id(saveNotification.getId())
+                .content(saveNotification.getContent())
+                .read(saveNotification.isRead())
+                .timestamp(saveNotification.getTimestamp())
+                .isFollow(true)
+                .isMessage(false)
+                .otherUser(saveNotification.getOtherUser().getId())
+                .build();
+
+        messagingTemplate.convertAndSend(
+                "/topic/notify/".concat(String.valueOf(followRequest.getFollowingId())),
+                WebSocketResponse.builder()
+                        .type("FOLLOW")
+                        .data(notificationResponse)
+                        .build()
+        );
+        showNotification(followRequest.getFollowingId());
+    }
+
+    @Override
+    public void messageNotification(MessageRequest msg) {
+        User senderUser = userRepository.findById(msg.getSenderId()).orElse(null);
+        Notification noti = new Notification();
+        noti.setUser(userRepository.findById(msg.getReceiverId()).orElse(null));
+        noti.setContent(senderUser.getName() + " messages you: " + msg.getContent());
+        noti.setRead(false);
+        noti.setFollow(false);
+        noti.setMessage(true);
+        noti.setOtherUser(senderUser);
+
+        Notification saveNotification = notificationRepository.save(noti);
+
+        NotificationResponse notificationResponse = NotificationResponse.builder()
+                .id(saveNotification.getId())
+                .content(saveNotification.getContent())
+                .read(saveNotification.isRead())
+                .timestamp(saveNotification.getTimestamp())
+                .isMessage(true)
+                .isFollow(false)
+                .otherUser(saveNotification.getOtherUser().getId())
+                .build();
+
+        messagingTemplate.convertAndSend(
+                "/topic/notify/".concat(String.valueOf(msg.getReceiverId())),
+                WebSocketResponse.builder()
+                        .type("MSG")
+                        .data(notificationResponse)
+                        .build()
+        );
+        showNotification(msg.getReceiverId());
     }
 
     /**
@@ -103,7 +200,10 @@ public class MessageSocketServiceImpl implements MessageSocketService {
         sendUserConversationByUserId(msg.getSenderId());
         sendUserConversationByUserId(msg.getReceiverId());
         sendMessagesByConversationId(conversation.getId());
+        messageNotification(msg);
     }
+
+
 
     /**
      * Delete a conversation by its unique conversation ID using a web socket.

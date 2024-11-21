@@ -1,6 +1,6 @@
 package viet.app.service;
 
-import org.springframework.stereotype.Service;
+import viet.app.dto.request.FollowRequest;
 import viet.app.dto.request.MessageRequest;
 
 public interface MessageSocketService {
@@ -39,4 +39,10 @@ public interface MessageSocketService {
      * @param messageId      The ID of the message to be deleted.
      */
     void deleteMessageByMessageId(long conversationId, long messageId);
+
+    void showNotification(long userId);
+
+    void followNotification(FollowRequest followRequest);
+
+    void messageNotification(MessageRequest msg);
 }

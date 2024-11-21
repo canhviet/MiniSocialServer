@@ -23,10 +23,10 @@ import static viet.app.util.Gender.*;
 @Getter
 public class UserRequestDTO implements Serializable {
 
-    @NotBlank(message = "name must be not blank") // Khong cho phep gia tri blank
+    @NotBlank(message = "name must be not blank")
     private String name;
 
-    @Email(message = "email invalid format") // Chi chap nhan nhung gia tri dung dinh dang email
+    @Email(message = "email invalid format")
     private String email;
 
     //@Pattern(regexp = "^\\d{10}$", message = "phone invalid format")
@@ -35,7 +35,7 @@ public class UserRequestDTO implements Serializable {
 
     @NotNull(message = "dateOfBirth must be not null")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    @JsonFormat(pattern = "MM/dd/yyyy")
+    @JsonFormat(pattern = "YYYY-MM-DD")
     private Date dateOfBirth;
 
     //@Pattern(regexp = "^male|female|other$", message = "gender must be one in {male, female, other}")
@@ -45,7 +45,6 @@ public class UserRequestDTO implements Serializable {
     @NotNull(message = "username must be not null")
     private String username;
 
-    @NotNull(message = "password must be not null")
     private String password;
 
     @NotNull(message = "type must be not null")

@@ -21,4 +21,8 @@ public class Comment extends AbstractEntity<Long> {
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post;
+
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    private Comment parent;
 }

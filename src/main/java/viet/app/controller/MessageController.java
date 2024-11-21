@@ -1,8 +1,10 @@
 package viet.app.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
+import viet.app.dto.request.FollowRequest;
 import viet.app.dto.request.MessageRequest;
 import viet.app.service.MessageSocketService;
 
@@ -17,6 +19,7 @@ import java.util.Map;
  * - /deleteConversation: Delete a conversation by its unique conversation ID using a web socket.
  * - /deleteMessage: Delete a message by its unique message ID within a conversation using a web socket.
  */
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class MessageController {
@@ -31,6 +34,17 @@ public class MessageController {
     public void sendUserConversationByUserId(long userId) {
         socketService.sendUserConversationByUserId(userId);
     }
+
+    @MessageMapping("/notify")
+    public void showNotification(long userId) {
+        socketService.showNotification(userId);
+    }
+
+    @MessageMapping("/follow")
+    public void followNotification(FollowRequest followRequest) {
+        socketService.followNotification(followRequest);
+    }
+
 
     /**
      * Send messages of a specific conversation to the connected users through a web socket.
@@ -92,4 +106,5 @@ public class MessageController {
         long messageId = (long) payload.get("messageId");
         socketService.deleteMessageByMessageId(conversationId, messageId);
     }
+
 }

@@ -31,6 +31,7 @@ public class CommentServiceImpl implements CommentService {
         comment.setContent(commentRequest.getContent());
         comment.setPost(getPostById(commentRequest.getPostId()));
         comment.setUser(getUserById(commentRequest.getUserId()));
+        comment.setParent(getCommentById(commentRequest.getParentId()));
         commentRepository.save(comment);
 
         log.info("Saving comment {}", comment.getContent());
@@ -48,6 +49,7 @@ public class CommentServiceImpl implements CommentService {
                 .userId(comment.getUser().getId())
                 .authorName(comment.getUser().getName())
                 .authorAvatarUrl(comment.getUser().getAvatar())
+                .parentId(getParentId(comment))
                 .build()).toList();
         return new ResponseData<>(HttpStatus.OK.value(), "get all comments", comments);
     }
@@ -58,5 +60,16 @@ public class CommentServiceImpl implements CommentService {
 
     private User getUserById(long userId) {
         return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("user.not.found"));
+    }
+
+    private Comment getCommentById(long id) {
+        return commentRepository.findById(id).orElse(null);
+    }
+
+    private long getParentId(Comment comment) {
+        if(comment.getParent() != null) {
+            return comment.getParent().getId();
+        }
+        return 0;
     }
 }

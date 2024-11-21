@@ -64,8 +64,8 @@ public class AppConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(WHITE_LIST).permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allowed all OPTIONS method
-//                        .requestMatchers("/post/**").hasAnyAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allow prelight
+//                        .requestMatchers("/post/**").hasAnyAuthority("ADMIN") // authority API
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint((request, response, authException) -> {
