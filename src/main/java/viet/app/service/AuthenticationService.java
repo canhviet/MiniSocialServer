@@ -17,10 +17,7 @@ import viet.app.dto.request.SignInRequest;
 import viet.app.dto.request.UserRequestDTO;
 import viet.app.dto.response.TokenResponse;
 import viet.app.exception.InvalidDataException;
-import viet.app.model.Role;
-import viet.app.model.Token;
-import viet.app.model.User;
-import viet.app.model.UserHasRole;
+import viet.app.model.*;
 import viet.app.repository.RoleRepository;
 import viet.app.repository.UserHasRoleRepository;
 import viet.app.util.UserType;
@@ -43,6 +40,7 @@ public class AuthenticationService {
     private final MailService mailService;
     private final RoleRepository roleRepository;
     private final UserHasRoleRepository userHasRoleRepository;
+    private final RedisTokenService redisTokenService;
 
     public TokenResponse accessToken(SignInRequest signInRequest) {
         log.info("---------- authenticate ----------");
@@ -66,7 +64,8 @@ public class AuthenticationService {
         String refreshToken = jwtService.generateRefreshToken(user);
 
         // save token to db
-        tokenService.save(Token.builder().username(user.getUsername()).accessToken(accessToken).refreshToken(refreshToken).build());
+        //tokenService.save(Token.builder().username(user.getUsername()).accessToken(accessToken).refreshToken(refreshToken).build());
+        redisTokenService.save(RedisToken.builder().id(user.getUsername()).accessToken(accessToken).refreshToken(refreshToken).build());
 
         return TokenResponse.builder()
                 .accessToken(accessToken)
@@ -99,7 +98,9 @@ public class AuthenticationService {
         String accessToken = jwtService.generateToken(user);
 
         // save token to db
-        tokenService.save(Token.builder().username(user.getUsername()).accessToken(accessToken).refreshToken(refreshToken).build());
+        //tokenService.save(Token.builder().username(user.getUsername()).accessToken(accessToken).refreshToken(refreshToken).build());
+        redisTokenService.save(RedisToken.builder().id(user.getUsername()).accessToken(accessToken).refreshToken(refreshToken).build());
+
 
         return TokenResponse.builder()
                 .accessToken(accessToken)
@@ -124,7 +125,8 @@ public class AuthenticationService {
 
         final String userName = jwtService.extractUsername(token, ACCESS_TOKEN);
 
-        tokenService.delete(userName);
+        //tokenService.delete(userName);
+        redisTokenService.remove(userName);
 
         return "Removed!";
     }
@@ -144,7 +146,9 @@ public class AuthenticationService {
         String resetToken = jwtService.generateResetToken(user);
 
         // save to db
-        tokenService.save(Token.builder().username(user.getUsername()).resetToken(resetToken).build());
+        //tokenService.save(Token.builder().username(user.getUsername()).resetToken(resetToken).build());
+        redisTokenService.save(RedisToken.builder().id(user.getUsername()).resetToken(resetToken).build());
+
 
         // TODO send email to user
         String confirmLink = String.format("http://localhost:4200/reset-password?token=%s", resetToken);
@@ -198,6 +202,9 @@ public class AuthenticationService {
     private User validateToken(String token) {
         // validate token
         var userName = jwtService.extractUsername(token, RESET_TOKEN);
+
+        // check token in redis
+        redisTokenService.isExists(userName);
 
         // validate user is active or not
         var user = userService.getByUsername(userName);
