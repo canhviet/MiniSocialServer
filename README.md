@@ -57,6 +57,9 @@
    git clone https://github.com/canhviet/OnstagramBackend.git
    cd OnstagramBackend
    ```
-
+**Or pull api service from Docker Hub**:
+   ```bash
+   docker pull canhviet/my_app-api-service:latest
+   ```
 ## License
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
