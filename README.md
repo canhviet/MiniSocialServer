@@ -32,7 +32,7 @@
 
 - **Frontend Integration**:
   - Designed to work with an Angular front-end.
-  - [Link](https://github.com/canhviet/OnstagramClient)
+  - [Link](https://github.com/canhviet/MiniSocialClient)
 
 - **Database**:
   - PostgreSQL
@@ -54,8 +54,8 @@
 
 **Clone the Repository**:
    ```bash
-   git clone https://github.com/canhviet/OnstagramBackend.git
-   cd OnstagramBackend
+   git clone https://github.com/canhviet/MiniSocialServer.git
+   cd MiniSocialServer
    ```
 **Or pull api service from Docker Hub**:
    ```bash
